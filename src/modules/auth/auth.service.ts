@@ -20,18 +20,27 @@ export class AuthService {
         return userWithoutPassword;
     }
 
-    async register(data: RegisterDto): Promise<Omit<User, 'password'>> {
-        const userExists = await this.prisma.user.findUnique({
+    async register(data: RegisterDto): Promise<{ message: string; accessToken: string; user: Omit<User, 'password'> }> {
+    const userExists = await this.prisma.user.findUnique({
         where: { email: data.email },
-        });
+    });
 
-        if (userExists) {
+    if (userExists) {
         throw new ConflictException('Email already registered');
-        }
-
-        const user = await this.userUtilsService.createUser(data);
-        return this.toEntity(user);
     }
+
+    const user = await this.userUtilsService.createUser(data);
+
+    const payload = { sub: user.id, email: user.email };
+    const token = await this.jwtService.signAsync(payload);
+
+    return {
+        message: 'Utilisateur créé avec succès',
+        accessToken: token,
+        user: this.toEntity(user),
+    };
+    }
+
 
     async login(data: LoginDto): Promise<{ accessToken: string; user: Omit<User, 'password'> }> {
         const user = await this.prisma.user.findUnique({
