@@ -3,9 +3,9 @@ import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { User } from '@prisma/client';
 import { AdminGuard } from '../admin/admin.guard';
-
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('users')
-@UseGuards(AdminGuard)
+@UseGuards(JwtAuthGuard, AdminGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
@@ -14,7 +14,7 @@ export class UsersController {
         return this.usersService.create(dto);
     }
 
-    @Get()
+    @Get('all')
     async findAll(): Promise<User[]> {
         return this.usersService.findAll();
     }

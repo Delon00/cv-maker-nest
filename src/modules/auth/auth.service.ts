@@ -21,24 +21,25 @@ export class AuthService {
     }
 
     async register(data: RegisterDto): Promise<{ message: string; accessToken: string; user: Omit<User, 'password'> }> {
-    const userExists = await this.prisma.user.findUnique({
-        where: { email: data.email },
-    });
+        const userExists = await this.prisma.user.findUnique({
+            where: { email: data.email },
+        });
 
-    if (userExists) {
-        throw new ConflictException('Email already registered');
-    }
+        if (userExists) {
+            throw new ConflictException('Email already registered');
+        }
 
-    const user = await this.userUtilsService.createUser(data);
+        const user = await this.userUtilsService.createUser(data);
 
-    const payload = { sub: user.id, email: user.email };
-    const token = await this.jwtService.signAsync(payload);
+        const payload = { sub: user.id, email: user.email, plan: user.plan};
+        const token = await this.jwtService.signAsync(payload);
 
-    return {
-        message: 'Utilisateur créé avec succès',
+        return {
+        message: 'User registered successfully',
         accessToken: token,
         user: this.toEntity(user),
-    };
+        };
+
     }
 
 
@@ -51,7 +52,7 @@ export class AuthService {
         throw new UnauthorizedException('Email ou mot de passe incorrect');
         }
 
-        const payload = { sub: user.id, email: user.email };
+        const payload = { sub: user.id, email: user.email, plan: user.plan };
         const token = await this.jwtService.signAsync(payload);
 
         return {

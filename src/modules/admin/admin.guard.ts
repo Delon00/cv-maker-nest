@@ -8,6 +8,7 @@ export class AdminGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
+    console.log('AdminGuard user:', user);
 
     if (!user || user.plan !== 'admin') {
       throw new UnauthorizedException('Access denied. Admins only.');
