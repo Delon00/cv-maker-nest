@@ -31,7 +31,7 @@ export class AuthService {
 
         const user = await this.userUtilsService.createUser(data);
 
-        const payload = { sub: user.id, email: user.email, plan: user.plan};
+        const payload = { userId: user.id, email: user.email, plan: user.plan};
         const token = await this.jwtService.signAsync(payload);
 
         return {
@@ -52,7 +52,7 @@ export class AuthService {
         throw new UnauthorizedException('Email ou mot de passe incorrect');
         }
 
-        const payload = { sub: user.id, email: user.email, plan: user.plan };
+        const payload = { userId: user.id, email: user.email, plan: user.plan };
         const token = await this.jwtService.signAsync(payload);
 
         return {

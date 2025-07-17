@@ -12,7 +12,7 @@ export class TemplatesController {
         return this.templatesService.create(dto);
     }
 
-    @Get()
+    @Get('all')
     findAll(): Promise<Template[]> {
         return this.templatesService.findAll();
     }

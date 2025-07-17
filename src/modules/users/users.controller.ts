@@ -5,15 +5,15 @@ import { User } from '@prisma/client';
 import { AdminGuard } from '../admin/admin.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('users')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
-
+    @UseGuards(AdminGuard)
     @Post()
     async create(@Body() dto: CreateUserDto): Promise<User> {
         return this.usersService.create(dto);
     }
-
+    @UseGuards(AdminGuard)
     @Get('all')
     async findAll(): Promise<User[]> {
         return this.usersService.findAll();
