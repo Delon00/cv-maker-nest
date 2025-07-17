@@ -26,19 +26,25 @@ model User {
 }
 
 model Cv {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   userId      String
   title       String?
+  linkedIn    String?
+  website     String?
   templateId  String
   data        Json
-  user        User      @relation(fields: [userId], references: [id])
-  template    Template  @relation(fields: [templateId], references: [id])
+  user        User           @relation(fields: [userId], references: [id])
+  template    Template       @relation(fields: [templateId], references: [id])
   educations  Education[]
   experiences Experience[]
   skills      Skill[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  languages   Language[]   
+  interests   Interest[]    
+  certifications Certification[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
+
 
 model Template {
   id          String    @id @default(uuid())
@@ -54,24 +60,35 @@ model Template {
 model Education {
   id        String   @id @default(uuid())
   cvId      String
-  school    String
-  degree    String
+  school    String?
+  location    String?
   field     String?
-  startDate DateTime
+  startDate DateTime?
   endDate   DateTime?
   cv        Cv       @relation(fields: [cvId], references: [id])
 }
 
 model Experience {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   cvId        String
-  company     String
-  position    String
+  company     String?
+  location    String?
+  jobTitle    String?
   description String?
-  startDate   DateTime
+  startDate   DateTime?
   endDate     DateTime?
-  cv          Cv       @relation(fields: [cvId], references: [id])
+  cv          Cv         @relation(fields: [cvId], references: [id])
+  missions    Mission[]
 }
+
+
+model Mission {
+  id           String     @id @default(uuid())
+  experienceId String
+  description  String     
+  experience   Experience @relation(fields: [experienceId], references: [id])
+}
+
 
 model Skill {
   id   String   @id @default(uuid())
@@ -81,3 +98,26 @@ model Skill {
 }
 
 
+model Language {
+  id       String  @id @default(uuid())
+  cvId     String
+  name     String  
+  level    String? 
+  cv       Cv      @relation(fields: [cvId], references: [id])
+}
+
+model Interest {
+  id       String  @id @default(uuid())
+  cvId     String
+  name     String 
+  cv       Cv      @relation(fields: [cvId], references: [id])
+}
+
+model Certification {
+  id          String   @id @default(uuid())
+  cvId        String
+  title       String   
+  institution String?  
+  date        DateTime? 
+  cv          Cv       @relation(fields: [cvId], references: [id])
+}
