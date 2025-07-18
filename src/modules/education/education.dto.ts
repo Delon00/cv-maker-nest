@@ -10,24 +10,22 @@ export class CreateEducationDto {
     @IsNotEmpty()
     school: string;
 
-    @IsString()
-    @IsNotEmpty()
-    degree: string;
 
+    @IsOptional()
+    @IsString()
+    location?: string;
+    
     @IsOptional()
     @IsString()
     field?: string;
 
     @IsDateString()
-    startDate: string;
+    startYear: string;
 
     @IsOptional()
     @IsDateString()
-    endDate?: string;
+    endYear?: string;
 
-    @IsOptional()
-    @IsNumber()
-    gpa?: number;
 }
 
 export class UpdateEducationDto extends PartialType(CreateEducationDto) {}
@@ -35,10 +33,9 @@ export class UpdateEducationDto extends PartialType(CreateEducationDto) {}
 export class EducationResponseDto {
     id: string;
     cvId: string;
-    school: string;
-    degree: string;
+    school?: string;
+    location?:string
     field?: string;
-    startDate: Date;
-    endDate?: Date;
-    gpa?: number;
+    startYear?: string;
+    endYear?: string;
 }

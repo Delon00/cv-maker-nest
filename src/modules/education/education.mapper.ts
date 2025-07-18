@@ -4,14 +4,13 @@ import { EducationResponseDto } from './education.dto';
 export class EducationMapper {
     static toResponseDto(education: Education): EducationResponseDto {
         return {
-        id: education.id,
-        cvId: education.cvId,
-        school: education.school,
-        degree: education.degree,
-        field: education.field ?? undefined,
-        startDate: education.startDate,
-        endDate: education.endDate ?? undefined,
-
+            id: education.id,
+            cvId: education.cvId,
+            school: education.school ?? undefined,
+            location: education.location ?? undefined,
+            field: education.field ?? undefined,
+            startYear: education.startYear ?? undefined,
+            endYear: education.endYear ?? undefined,
         };
     }
 }

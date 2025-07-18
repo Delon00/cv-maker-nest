@@ -9,12 +9,12 @@ export class EducationService {
 
     async create(dto: CreateEducationDto): Promise<EducationResponseDto> {
         const created = await this.repo.create({
-        cv: { connect: { id: dto.cvId } },
-        school: dto.school,
-        degree: dto.degree,
-        field: dto.field,
-        startDate: new Date(dto.startDate),
-        endDate: dto.endDate ? new Date(dto.endDate) : null,
+            cv: { connect: { id: dto.cvId } },
+            school: dto.school,
+            location: dto.location ? dto.location : undefined,
+            field: dto.field ? dto.field : undefined,
+            startYear: dto.startYear ? dto.startYear : undefined,
+            endYear: dto.endYear ? dto.endYear : undefined,
         });
 
         return EducationMapper.toResponseDto(created);
@@ -36,11 +36,11 @@ export class EducationService {
         if (!existing) throw new NotFoundException('Education not found');
 
         const updated = await this.repo.update(id, {
-        school: dto.school,
-        degree: dto.degree,
-        field: dto.field,
-        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+            school: dto.school,
+            location: dto.location ? dto.location : undefined,
+            field: dto.field ? dto.field : undefined,
+            startYear: dto.startYear ? dto.startYear : undefined,
+            endYear: dto.endYear ? dto.endYear : undefined,
         });
 
         return EducationMapper.toResponseDto(updated);

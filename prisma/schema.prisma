@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -21,6 +15,7 @@ model User {
   lastName   String?
   plan       String   @default("free")
   cvs        Cv[]
+  profiles   Profile[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -45,7 +40,6 @@ model Cv {
   updatedAt   DateTime       @updatedAt
 }
 
-
 model Template {
   id          String    @id @default(uuid())
   name        String
@@ -61,10 +55,10 @@ model Education {
   id        String   @id @default(uuid())
   cvId      String
   school    String?
-  location    String?
+  location  String?
   field     String?
-  startDate DateTime?
-  endDate   DateTime?
+  startYear String?
+  endYear   String?
   cv        Cv       @relation(fields: [cvId], references: [id])
 }
 
@@ -75,12 +69,13 @@ model Experience {
   location    String?
   jobTitle    String?
   description String?
-  startDate   DateTime?
-  endDate     DateTime?
+  startMonth  String?
+  startYear   String?
+  endMonth    String?
+  endYear     String?
   cv          Cv         @relation(fields: [cvId], references: [id])
   missions    Mission[]
 }
-
 
 model Mission {
   id           String     @id @default(uuid())
@@ -89,14 +84,12 @@ model Mission {
   experience   Experience @relation(fields: [experienceId], references: [id])
 }
 
-
 model Skill {
   id   String   @id @default(uuid())
   cvId String
   name String
   cv   Cv       @relation(fields: [cvId], references: [id])
 }
-
 
 model Language {
   id       String  @id @default(uuid())
@@ -107,10 +100,10 @@ model Language {
 }
 
 model Interest {
-  id       String  @id @default(uuid())
-  cvId     String
-  name     String 
-  cv       Cv      @relation(fields: [cvId], references: [id])
+  id            String  @id @default(uuid())
+  cvId          String
+  name_interest String 
+  cv            Cv      @relation(fields: [cvId], references: [id])
 }
 
 model Certification {
@@ -120,4 +113,87 @@ model Certification {
   institution String?  
   date        DateTime? 
   cv          Cv       @relation(fields: [cvId], references: [id])
+}
+
+//
+// NOUVEAUX MODÈLES POUR LES PROFILS RÉUTILISABLES
+//
+
+model Profile {
+  id              String                @id @default(uuid())
+  userId          String
+  title           String                // ex : "Développeur Frontend"
+  user            User                  @relation(fields: [userId], references: [id])
+  experiences     ProfileExperience[]
+  educations      ProfileEducation[]
+  skills          ProfileSkill[]
+  languages       ProfileLanguage[]
+  interests       ProfileInterest[]
+  certifications  ProfileCertification[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
+
+model ProfileExperience {
+  id          String             @id @default(uuid())
+  profileId   String
+  company     String?
+  location    String?
+  jobTitle    String?
+  description String?
+  startMonth  String?
+  startYear   String?
+  endMonth    String?
+  endYear     String?
+  profile     Profile            @relation(fields: [profileId], references: [id])
+  missions    ProfileMission[]
+}
+
+model ProfileMission {
+  id              String              @id @default(uuid())
+  experienceId    String
+  description     String
+  experience      ProfileExperience   @relation(fields: [experienceId], references: [id])
+}
+
+model ProfileEducation {
+  id         String   @id @default(uuid())
+  profileId  String
+  school     String?
+  location   String?
+  field      String?
+  startYear  String?
+  endYear    String?
+  profile    Profile  @relation(fields: [profileId], references: [id])
+}
+
+model ProfileSkill {
+  id        String   @id @default(uuid())
+  profileId String
+  name      String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+}
+
+model ProfileLanguage {
+  id        String   @id @default(uuid())
+  profileId String
+  name      String
+  level     String?
+  profile   Profile  @relation(fields: [profileId], references: [id])
+}
+
+model ProfileInterest {
+  id            String   @id @default(uuid())
+  profileId     String
+  name_interest String
+  profile       Profile  @relation(fields: [profileId], references: [id])
+}
+
+model ProfileCertification {
+  id          String   @id @default(uuid())
+  profileId   String
+  title       String
+  institution String?
+  date        DateTime?
+  profile     Profile  @relation(fields: [profileId], references: [id])
 }

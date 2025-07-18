@@ -12,18 +12,32 @@ export class CreateExperienceDto {
 
     @IsString()
     @IsNotEmpty()
-    position: string;
+    jobTitle: string;
+
+    @IsString()
+    @IsNotEmpty()
+    location: string;
 
     @IsOptional()
     @IsString()
     description?: string;
 
-    @IsDateString()
-    startDate: string;
+    @IsOptional()
+    @IsString()
+    startMonth: string;
+
+    @IsOptional()
+    @IsString()
+    startYear: string;
+
+
+    @IsOptional()
+    @IsString()
+    endMonth: string;
 
     @IsOptional()
     @IsDateString()
-    endDate?: string;
+    endYear?: string;
 }
 
 export class UpdateExperienceDto extends PartialType(CreateExperienceDto) {}
@@ -31,9 +45,12 @@ export class UpdateExperienceDto extends PartialType(CreateExperienceDto) {}
 export class ExperienceResponseDto {
     id: string;
     cvId: string;
-    company: string;
-    position: string;
+    jobTitle?: string;
+    company?: string;
+    location?: string;
     description?: string;
-    startDate: Date;
-    endDate?: Date;
+    startMonth?: string;
+    startYear?: string;
+    endMonth?: string;
+    endYear?: string;
 }

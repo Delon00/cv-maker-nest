@@ -9,12 +9,14 @@ export class ExperienceService {
 
     async create(dto: CreateExperienceDto): Promise<ExperienceResponseDto> {
         const exp = await this.repo.create({
-        cv: { connect: { id: dto.cvId } },
-        company: dto.company,
-        position: dto.position,
-        description: dto.description,
-        startDate: new Date(dto.startDate),
-        endDate: dto.endDate ? new Date(dto.endDate) : null,
+            cv: { connect: { id: dto.cvId } },
+            company: dto.company,
+            jobTitle: dto.jobTitle,
+            location: dto.location,
+            startMonth: dto.startMonth,
+            startYear: dto.startYear,
+            endMonth: dto.endMonth ? dto.endMonth : null,
+            endYear: dto.endYear ? dto.endYear : null,
         });
         return ExperienceMapper.toResponseDto(exp);
     }
@@ -35,11 +37,13 @@ export class ExperienceService {
         if (!existing) throw new NotFoundException('Experience not found');
 
         const updated = await this.repo.update(id, {
-        company: dto.company,
-        position: dto.position,
-        description: dto.description,
-        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+            company: dto.company,
+            location: dto.location,
+            description: dto.description,
+            startMonth: dto.startMonth,
+            startYear: dto.startYear,
+            endMonth: dto.endMonth ? dto.endMonth : null,
+            endYear: dto.endYear ? dto.endYear : null,
         });
 
         return ExperienceMapper.toResponseDto(updated);
