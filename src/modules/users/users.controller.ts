@@ -9,6 +9,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
+    
     @UseGuards(AdminGuard)
     @Post()
     async create(@Body() dto: CreateUserDto): Promise<User> {

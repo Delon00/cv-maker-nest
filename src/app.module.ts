@@ -15,9 +15,12 @@ import { UtilsService } from './shared/shared.service';
 import { SkillsModule } from './modules/skills/skills.module';
 import { ExperiencesModule } from './modules/experiences/experiences.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { LanguagesModule } from './modules/languages/languages.module';
+import { InterestsModule } from './modules/interests/interests.module';
+import { CertificationsModule } from './modules/certifications/certifications.module';
 
 @Module({
-  imports: [AuthModule, CvModule, TemplatesCvModule, UsersModule, PrismaModule, EducationModule, SkillsModule, ExperiencesModule, AdminModule],
+  imports: [AuthModule, CvModule, TemplatesCvModule, UsersModule, PrismaModule, EducationModule, SkillsModule, ExperiencesModule, AdminModule, LanguagesModule, InterestsModule, CertificationsModule],
   controllers: [AppController, CvController, TemplatesController],
   providers: [AppService, TemplatesService, UtilsService],
 })

@@ -1,55 +1,46 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import {CreateCvDto,UpdateCvDto,} from './dto/cv.dto';
+import { Injectable, NotFoundException } from '@nestjs/common'; 
 
-    @Injectable()
-    export class CvService {
-    constructor(private prisma: PrismaService) {}
+import { CreateCvDto, UpdateCvDto, CvResponseDto } from './cv.dto';
+import { CvMapper } from './cv.mapper';
+import { CvRepository } from './cv.repository';
 
-    async create(userId: string, createCvDto: CreateCvDto) {
-        return this.prisma.cv.create({
-            data: {userId,...createCvDto,},
-        });
+@Injectable()
+export class CvService {
+    constructor(
+        private readonly repo: CvRepository,
+        private readonly mapper: CvMapper,
+    ) {}
+
+    async create(userId: string, createCvDto: CreateCvDto): Promise<CvResponseDto> {
+        const cvEntity = await this.repo.create(userId, createCvDto);
+        return this.mapper.toResponseDto(cvEntity);
     }
 
-    async findAllByUser(userId: string) {
-        return this.prisma.cv.findMany({
-        where: { userId },
-        include: {
-            educations: true,
-            experiences: true,
-            skills: true,
-            template: true,
-        },
-        });
+    async findAllByUser(userId: string): Promise<CvResponseDto[]> {
+        const cvs = await this.repo.findAllByUser(userId);
+        return cvs.map(cv => this.mapper.toResponseDto(cv));
     }
 
-    async findOne(id: string, userId: string) {
-        const cv = await this.prisma.cv.findFirst({
-        where: { id, userId },
-        include: {
-            educations: true,
-            experiences: true,
-            skills: true,
-            template: true,
-        },
-        });
-        if (!cv) throw new NotFoundException('CV not found');
-        return cv;
+    async findOneByUser(id: string, userId: string): Promise<CvResponseDto> {
+        const cv = await this.repo.findOneByUser(id, userId);
+        return this.mapper.toResponseDto(cv);
     }
 
-    async update(id: string, userId: string, updateCvDto: UpdateCvDto) {
-        await this.findOne(id, userId);
-        return this.prisma.cv.update({
-        where: { id },
-        data: updateCvDto,
-        });
+    async findByName(cvName: string, userId: string): Promise<CvResponseDto | null> {
+        const cv = await this.repo.findByName(cvName, userId);
+        return cv ? this.mapper.toResponseDto(cv) : null;
     }
 
-    async remove(id: string, userId: string) {
-        await this.findOne(id, userId);
-        return this.prisma.cv.delete({
-        where: { id },
-        });
+
+    async update(id: string, userId: string, updateCvDto: UpdateCvDto): Promise<CvResponseDto> {
+        const updatedCv = await this.repo.update(id, userId, updateCvDto);
+        return this.mapper.toResponseDto(updatedCv);
     }
+
+    async remove(id: string, userId: string): Promise<{ message: string }> {
+        await this.repo.remove(id, userId);
+        return { message: 'CV supprimé avec succès' };
+    }
+
+
 }
