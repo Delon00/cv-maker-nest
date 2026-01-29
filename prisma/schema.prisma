@@ -1,78 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  extensions = [vector]
 }
+
+// ---------------------------------------------------------
+// UTILISATEUR & SYSTÈME ÉCONOMIQUE
+// ---------------------------------------------------------
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  firstName  String?
-  lastName   String?
-  plan       String   @default("free")
-  cvs        Cv[]
-  profiles   Profile[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  
+  // Gestion Abonnement & Jetons
+  plan            String   @default("free") // "free", "pro"
+  subscriptionEnd DateTime? // Date de fin de l'abonnement PRO (null si Free)
+  credits         Int      @default(10) // Solde de jetons (ex: 10 offerts à l'inscription)
+
+  // Relations
+  cvs                Cv[]
+  profiles           Profile[]
+  applications       JobApplication[]      // Pour le suivi des candidatures
+  creditTransactions CreditTransaction[]   // Historique des achats/dépenses
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model Cv {
-  id          String         @id @default(uuid())
+// Historique des transactions de crédits (Achats & Dépenses)
+model CreditTransaction {
+  id          String   @id @default(uuid())
   userId      String
-  templateId  String
-  cvName      String
-  profile     String?
-  linkedIn    String?
-  website     String?
-  lastName    String?
-  firstName   String?
-  email       String?
-  phone       String?
-  resume      String?
-  city        String?
-  educations  Education[]
-  experiences Experience[]
-  skills      Skill[]
-  languages   Language[]   
-  interests   Interest[]    
-  certifications Certification[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Int      // Négatif pour une dépense (-20), Positif pour un achat (+100)
+  featureName String   // Ex: "GENERATE_COVER_LETTER", "BUY_PACK_50", "CV_SCORE"
+  createdAt   DateTime @default(now())
+}
 
-  user        User           @relation(fields: [userId], references: [id])
-  template    Template       @relation(fields: [templateId], references: [id])
+// ---------------------------------------------------------
+// SUIVI DES CANDIDATURES (ATS PERSONNEL / KANBAN)
+// ---------------------------------------------------------
+
+model JobApplication {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  
+  companyName  String
+  jobTitle     String
+  jobUrl       String?   // Lien vers l'offre (LinkedIn, Indeed...)
+  location     String?
+  salary       String?   // Fourchette de salaire visée ou proposée
+  
+  status       ApplicationStatus @default(TO_APPLY) // Statut pour le Kanban
+  
+  appliedDate  DateTime? // Date d'envoi de la candidature
+  contactName  String?   // Nom du recruteur
+  contactEmail String?   // Email du recruteur
+  notes        String?   // Tes notes personnelles sur l'entretien, etc.
+
+  // Lien optionnel vers le CV spécifique utilisé pour cette candidature
+  cvId         String?
+  cv           Cv?       @relation(fields: [cvId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum ApplicationStatus {
+  TO_APPLY      // À postuler
+  APPLIED       // Candidature envoyée
+  INTERVIEWING  // Entretien en cours
+  OFFER         // Offre reçue
+  REJECTED      // Refusé
+  ARCHIVED      // Archivé / Sans suite
+}
+
+// ---------------------------------------------------------
+// GESTION DES CVs (DOCUMENTS GÉNÉRÉS)
+// ---------------------------------------------------------
+
+model Cv {
+  id             String   @id @default(uuid())
+  userId         String
+  templateId     String
+  cvName         String   // Nom du fichier/projet (ex: "CV Dev Fullstack 2024")
+  
+  // Données spécifiques à ce CV (peuvent différer du profil global)
+  profile        String?  // Titre du profil sur le CV
+  linkedIn       String?
+  website        String?
+  lastName       String?
+  firstName      String?
+  email          String?
+  phone          String?
+  resume         String?  // Résumé / Bio courte
+  city           String?
+  
+  // Sections du CV
+  educations     Education[]
+  experiences    Experience[]
+  skills         Skill[]
+  languages      Language[]    
+  interests      Interest[]     
+  certifications Certification[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id])
+  template       Template @relation(fields: [templateId], references: [id])
+  applications   JobApplication[] // Un CV peut être lié à plusieurs candidatures
+
   @@unique([userId, cvName])
 }
 
-
 model Template {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
   couleur     String?
-  previewUrl  String?
+  previewUrl  String?  // Image d'aperçu du template
+  isPro       Boolean  @default(false) // Si true, nécessite Plan Pro ou Jetons
   cvs         Cv[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
+// --- SOUS-MODÈLES POUR CV ---
+
 model Education {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   cvId      String
   school    String?
   location  String?
   field     String?
   startYear String?
   endYear   String?
-  cv        Cv       @relation(fields: [cvId], references: [id])
+  cv        Cv      @relation(fields: [cvId], references: [id], onDelete: Cascade)
 }
 
 model Experience {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   cvId        String
   company     String?
   location    String?
@@ -82,7 +166,7 @@ model Experience {
   startYear   String?
   endMonth    String?
   endYear     String?
-  cv          Cv         @relation(fields: [cvId], references: [id])
+  cv          Cv       @relation(fields: [cvId], references: [id], onDelete: Cascade)
   missions    Mission[]
 }
 
@@ -90,61 +174,63 @@ model Mission {
   id           String     @id @default(uuid())
   experienceId String
   description  String     
-  experience   Experience @relation(fields: [experienceId], references: [id])
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 }
 
 model Skill {
-  id   String   @id @default(uuid())
-  cvId String
-  name String
-  cv   Cv       @relation(fields: [cvId], references: [id])
+  id     String @id @default(uuid())
+  cvId   String
+  name   String
+  cv     Cv     @relation(fields: [cvId], references: [id], onDelete: Cascade)
 }
 
 model Language {
-  id       String  @id @default(uuid())
-  cvId     String
-  name     String  
-  level    String? 
-  cv       Cv      @relation(fields: [cvId], references: [id])
+  id     String  @id @default(uuid())
+  cvId   String
+  name   String  
+  level  String? 
+  cv     Cv      @relation(fields: [cvId], references: [id], onDelete: Cascade)
 }
 
 model Interest {
-  id            String  @id @default(uuid())
+  id            String @id @default(uuid())
   cvId          String
   name_interest String 
-  cv            Cv      @relation(fields: [cvId], references: [id])
+  cv            Cv     @relation(fields: [cvId], references: [id], onDelete: Cascade)
 }
 
 model Certification {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   cvId        String
-  title       String   
-  institution String?  
+  title       String    
+  institution String?   
   date        DateTime? 
-  cv          Cv       @relation(fields: [cvId], references: [id])
+  cv          Cv        @relation(fields: [cvId], references: [id], onDelete: Cascade)
 }
 
-//
-// NOUVEAUX MODÈLES POUR LES PROFILS RÉUTILISABLES
-//
+// ---------------------------------------------------------
+// PROFILS RÉUTILISABLES (BASE DE DONNÉES UTILISATEUR)
+// ---------------------------------------------------------
 
 model Profile {
-  id              String                @id @default(uuid())
-  userId          String
-  title           String                
-  user            User                  @relation(fields: [userId], references: [id])
-  experiences     ProfileExperience[]
-  educations      ProfileEducation[]
-  skills          ProfileSkill[]
-  languages       ProfileLanguage[]
-  interests       ProfileInterest[]
-  certifications  ProfileCertification[]
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  id             String                 @id @default(uuid())
+  userId         String
+  title          String                 // Ex: "Profil Développeur", "Profil Chef de Projet"
+  user           User                   @relation(fields: [userId], references: [id])
+  
+  experiences    ProfileExperience[]
+  educations     ProfileEducation[]
+  skills         ProfileSkill[]
+  languages      ProfileLanguage[]
+  interests      ProfileInterest[]
+  certifications ProfileCertification[]
+  
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
 }
 
 model ProfileExperience {
-  id          String             @id @default(uuid())
+  id          String           @id @default(uuid())
   profileId   String
   company     String?
   location    String?
@@ -154,55 +240,55 @@ model ProfileExperience {
   startYear   String?
   endMonth    String?
   endYear     String?
-  profile     Profile            @relation(fields: [profileId], references: [id])
+  profile     Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
   missions    ProfileMission[]
 }
 
 model ProfileMission {
-  id              String              @id @default(uuid())
-  experienceId    String
-  description     String
-  experience      ProfileExperience   @relation(fields: [experienceId], references: [id])
+  id           String            @id @default(uuid())
+  experienceId String
+  description  String
+  experience   ProfileExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 }
 
 model ProfileEducation {
-  id         String   @id @default(uuid())
-  profileId  String
-  school     String?
-  location   String?
-  field      String?
-  startYear  String?
-  endYear    String?
-  profile    Profile  @relation(fields: [profileId], references: [id])
+  id        String  @id @default(uuid())
+  profileId String
+  school    String?
+  location  String?
+  field     String?
+  startYear String?
+  endYear   String?
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model ProfileSkill {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   profileId String
   name      String
-  profile   Profile  @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model ProfileLanguage {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   profileId String
   name      String
   level     String?
-  profile   Profile  @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model ProfileInterest {
-  id            String   @id @default(uuid())
+  id            String  @id @default(uuid())
   profileId     String
   name_interest String
-  profile       Profile  @relation(fields: [profileId], references: [id])
+  profile       Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model ProfileCertification {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   profileId   String
   title       String
   institution String?
   date        DateTime?
-  profile     Profile  @relation(fields: [profileId], references: [id])
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

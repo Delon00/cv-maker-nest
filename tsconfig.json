@@ -10,6 +10,18 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@environments/*": ["src/environments/*"],
+      "@services/*":["src/app/core/services/*"],
+      "@guards/*":["src/app/core/guards/*"],
+      "@interceptors/*":["src/app/core/interceptors/*"],
+      "@interfaces/*":["src/app/domain/interfaces/*"],
+      "@modules/*":["src/modules/*"],
+      "@utils/*":["src/app/utils/*"],
+
+      "@prismaClient/*":["prisma/generated/prisma/*"],
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
