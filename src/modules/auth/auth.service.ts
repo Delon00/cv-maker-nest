@@ -24,15 +24,13 @@ export class AuthService {
     // =================================================================
     public getCookieOptions(): CookieOptions {
         const isProduction = process.env.NODE_ENV === 'production';
-
+        
         return {
-            httpOnly: true,                // Sécurité XSS : JS ne peut pas lire le cookie
-            secure: isProduction,          // HTTPS obligatoire en prod, HTTP ok en dev
-            // 'Lax' est souvent suffisant et pose moins de soucis que 'Strict' pour la navigation
-            // Si front et back sont sur des domaines différents en prod, mettre 'None'
-            sameSite: isProduction ? 'none' : 'lax', 
-            path: '/',                     // TRES IMPORTANT : garantit que le cookie est valide sur tout le site
-            maxAge: 24 * 60 * 60 * 1000,   // 1 jour
+        httpOnly: true,                 // Empêche l'accès via JS client (sécurité XSS)
+        secure: isProduction,           // true en HTTPS uniquement
+        sameSite: isProduction ? 'none' : 'lax', // 'none' nécessaire si frontend/backend sur domaines différents en prod
+        path: '/',                      // INDISPENSABLE pour que le cookie soit accessible partout et supprimable
+        maxAge: 24 * 60 * 60 * 1000,    // 1 jour
         };
     }
 

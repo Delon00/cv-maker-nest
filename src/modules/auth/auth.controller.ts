@@ -4,15 +4,20 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ActiveUser } from './interfaces/activeUser.interface';
 
+interface RequestWithUser extends Request {
+    user: ActiveUser;
+}
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
+    
 
     @UseGuards(JwtAuthGuard)
     @Get('me')
-    async getProfile(@Req() req: Request) {
+    async getProfile(@Req() req: RequestWithUser) {
         return req.user;
     }
 
